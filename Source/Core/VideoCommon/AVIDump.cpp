@@ -116,7 +116,7 @@ bool AVIDump::CreateFile()
 	s_stream->codec->height = s_height;
 	s_stream->codec->time_base.num = 1;
 	s_stream->codec->time_base.den = VideoInterface::GetTargetRefreshRate();
-	s_stream->codec->gop_size = 12;
+	s_stream->codec->gop_size = 1;
 	s_stream->codec->pix_fmt = g_Config.bUseFFV1 ? AV_PIX_FMT_BGR0 : AV_PIX_FMT_YUV420P;
 
 	if (!(codec = avcodec_find_encoder(s_stream->codec->codec_id)) ||

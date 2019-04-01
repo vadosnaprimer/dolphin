@@ -36,7 +36,7 @@ static std::list<Message> s_msgList;
 
 void AddMessage(const std::string& str, u32 ms, u32 rgba)
 {
-	s_msgList.emplace_back(str, Common::Timer::GetTimeMs() + ms, rgba);
+	s_msgList.emplace_back(str, Common::Timer::GetTimeMs() + ms*4, rgba);
 }
 
 void DrawMessages()

@@ -5280,6 +5280,9 @@ bool wxWindowMSW::HandleGetMinMaxInfo(void *WXUNUSED_IN_WINCE(mmInfo))
         rc = true;
     }
 
+	info->ptMaxTrackSize.x = 8000;
+	info->ptMaxTrackSize.y = 8000;
+
     return rc;
 #endif
 }

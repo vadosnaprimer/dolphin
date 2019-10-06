@@ -80,7 +80,8 @@ static float AspectToWidescreen(float aspect)
 }
 
 Renderer::Renderer(int backbuffer_width, int backbuffer_height)
-    : m_backbuffer_width(backbuffer_width), m_backbuffer_height(backbuffer_height)
+    : m_backbuffer_width(backbuffer_width), m_backbuffer_height(backbuffer_height),
+      m_last_efb_scale(g_ActiveConfig.iEFBScale)
 {
   FramebufferManagerBase::SetLastXfbWidth(MAX_XFB_WIDTH);
   FramebufferManagerBase::SetLastXfbHeight(MAX_XFB_HEIGHT);
@@ -133,12 +134,26 @@ void Renderer::RenderToXFB(u32 xfbAddr, const EFBRectangle& sourceRc, u32 fbStri
 
 int Renderer::EFBToScaledX(int x) const
 {
-  return x * static_cast<int>(m_efb_scale);
+  switch (g_ActiveConfig.iEFBScale)
+  {
+  case SCALE_AUTO:  // fractional
+    return FramebufferManagerBase::ScaleToVirtualXfbWidth(x, m_target_rectangle);
+
+  default:
+    return x * (int)m_efb_scale_numeratorX / (int)m_efb_scale_denominatorX;
+  };
 }
 
 int Renderer::EFBToScaledY(int y) const
 {
-  return y * static_cast<int>(m_efb_scale);
+  switch (g_ActiveConfig.iEFBScale)
+  {
+  case SCALE_AUTO:  // fractional
+    return FramebufferManagerBase::ScaleToVirtualXfbHeight(y, m_target_rectangle);
+
+  default:
+    return y * (int)m_efb_scale_numeratorY / (int)m_efb_scale_denominatorY;
+  };
 }
 
 float Renderer::EFBToScaledXf(float x) const
@@ -153,31 +168,89 @@ float Renderer::EFBToScaledYf(float y) const
 
 std::tuple<int, int> Renderer::CalculateTargetScale(int x, int y) const
 {
-  return std::make_tuple(x * static_cast<int>(m_efb_scale), y * static_cast<int>(m_efb_scale));
+  if (g_ActiveConfig.iEFBScale == SCALE_AUTO || g_ActiveConfig.iEFBScale == SCALE_AUTO_INTEGRAL)
+  {
+    return std::make_tuple(x, y);
+  }
+
+  const int scaled_x =
+      x * static_cast<int>(m_efb_scale_numeratorX) / static_cast<int>(m_efb_scale_denominatorX);
+
+  const int scaled_y =
+      y * static_cast<int>(m_efb_scale_numeratorY) / static_cast<int>(m_efb_scale_denominatorY);
+
+  return std::make_tuple(scaled_x, scaled_y);
 }
 
 // return true if target size changed
 bool Renderer::CalculateTargetSize()
 {
-  if (g_ActiveConfig.iEFBScale == EFB_SCALE_AUTO_INTEGRAL)
-  {
-    // Set a scale based on the window size
-    int width = FramebufferManagerBase::ScaleToVirtualXfbWidth(EFB_WIDTH, m_target_rectangle);
-    int height = FramebufferManagerBase::ScaleToVirtualXfbHeight(EFB_HEIGHT, m_target_rectangle);
-    m_efb_scale = std::max((width - 1) / EFB_WIDTH + 1, (height - 1) / EFB_HEIGHT + 1);
-  }
-  else
-  {
-    m_efb_scale = g_ActiveConfig.iEFBScale;
-  }
-
-  const u32 max_size = g_ActiveConfig.backend_info.MaxTextureSize;
-  if (max_size < EFB_WIDTH * m_efb_scale)
-    m_efb_scale = max_size / EFB_WIDTH;
+  m_last_efb_scale = g_ActiveConfig.iEFBScale;
 
   int new_efb_width = 0;
   int new_efb_height = 0;
-  std::tie(new_efb_width, new_efb_height) = CalculateTargetScale(EFB_WIDTH, EFB_HEIGHT);
+
+  // TODO: Ugly. Clean up
+  switch (m_last_efb_scale)
+  {
+  case SCALE_AUTO:
+  case SCALE_AUTO_INTEGRAL:
+    new_efb_width = FramebufferManagerBase::ScaleToVirtualXfbWidth(EFB_WIDTH, m_target_rectangle);
+    new_efb_height =
+        FramebufferManagerBase::ScaleToVirtualXfbHeight(EFB_HEIGHT, m_target_rectangle);
+
+    if (m_last_efb_scale == SCALE_AUTO_INTEGRAL)
+    {
+      m_efb_scale_numeratorX = m_efb_scale_numeratorY =
+          std::max((new_efb_width - 1) / EFB_WIDTH + 1, (new_efb_height - 1) / EFB_HEIGHT + 1);
+      m_efb_scale_denominatorX = m_efb_scale_denominatorY = 1;
+      new_efb_width = EFBToScaledX(EFB_WIDTH);
+      new_efb_height = EFBToScaledY(EFB_HEIGHT);
+    }
+    else
+    {
+      m_efb_scale_numeratorX = new_efb_width;
+      m_efb_scale_denominatorX = EFB_WIDTH;
+      m_efb_scale_numeratorY = new_efb_height;
+      m_efb_scale_denominatorY = EFB_HEIGHT;
+    }
+    break;
+
+  case SCALE_1X:
+    m_efb_scale_numeratorX = m_efb_scale_numeratorY = 1;
+    m_efb_scale_denominatorX = m_efb_scale_denominatorY = 1;
+    break;
+
+  case SCALE_1_5X:
+    m_efb_scale_numeratorX = m_efb_scale_numeratorY = 3;
+    m_efb_scale_denominatorX = m_efb_scale_denominatorY = 2;
+    break;
+
+  case SCALE_2X:
+    m_efb_scale_numeratorX = m_efb_scale_numeratorY = 2;
+    m_efb_scale_denominatorX = m_efb_scale_denominatorY = 1;
+    break;
+
+  case SCALE_2_5X:
+    m_efb_scale_numeratorX = m_efb_scale_numeratorY = 5;
+    m_efb_scale_denominatorX = m_efb_scale_denominatorY = 2;
+    break;
+
+  default:
+    m_efb_scale_numeratorX = m_efb_scale_numeratorY = m_last_efb_scale - 3;
+    m_efb_scale_denominatorX = m_efb_scale_denominatorY = 1;
+
+    const u32 max_size = g_ActiveConfig.backend_info.MaxTextureSize;
+    if (max_size < EFB_WIDTH * m_efb_scale_numeratorX / m_efb_scale_denominatorX)
+    {
+      m_efb_scale_numeratorX = m_efb_scale_numeratorY = (max_size / EFB_WIDTH);
+      m_efb_scale_denominatorX = m_efb_scale_denominatorY = 1;
+    }
+
+    break;
+  }
+  if (m_last_efb_scale > SCALE_AUTO_INTEGRAL)
+    std::tie(new_efb_width, new_efb_height) = CalculateTargetScale(EFB_WIDTH, EFB_HEIGHT);
 
   if (new_efb_width != m_target_width || new_efb_height != m_target_height)
   {
@@ -310,14 +383,26 @@ void Renderer::DrawDebugText()
     std::string res_text;
     switch (g_ActiveConfig.iEFBScale)
     {
-    case EFB_SCALE_AUTO_INTEGRAL:
+    case SCALE_AUTO:
+      res_text = "Auto (fractional)";
+      break;
+    case SCALE_AUTO_INTEGRAL:
       res_text = "Auto (integral)";
       break;
-    case 1:
+    case SCALE_1X:
       res_text = "Native";
       break;
+    case SCALE_1_5X:
+      res_text = "1.5x";
+      break;
+    case SCALE_2X:
+      res_text = "2x";
+      break;
+    case SCALE_2_5X:
+      res_text = "2.5x";
+      break;
     default:
-      res_text = StringFromFormat("%dx", g_ActiveConfig.iEFBScale);
+      res_text = StringFromFormat("%dx", g_ActiveConfig.iEFBScale - 3);
       break;
     }
     const char* ar_text = "";
@@ -563,8 +648,7 @@ void Renderer::SetWindowSize(int width, int height)
   height = std::max(height, 1);
 
   // Scale the window size by the EFB scale.
-  if (g_ActiveConfig.iEFBScale != EFB_SCALE_AUTO_INTEGRAL)
-    std::tie(width, height) = CalculateTargetScale(width, height);
+  std::tie(width, height) = CalculateTargetScale(width, height);
 
   float scaled_width, scaled_height;
   std::tie(scaled_width, scaled_height) = ScaleToDisplayAspectRatio(width, height);

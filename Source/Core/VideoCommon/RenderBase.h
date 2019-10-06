@@ -78,7 +78,8 @@ public:
   virtual void RestoreState() {}
   virtual void ResetAPIState() {}
   virtual void RestoreAPIState() {}
-  // Ideal internal resolution - multiple of the native EFB resolution
+  // Ideal internal resolution - determined by display resolution (automatic scaling) and/or a
+  // multiple of the native EFB resolution
   int GetTargetWidth() const { return m_target_width; }
   int GetTargetHeight() const { return m_target_height; }
   // Display resolution
@@ -169,6 +170,7 @@ protected:
   // TODO: Add functionality to reinit all the render targets when the window is resized.
   int m_backbuffer_width = 0;
   int m_backbuffer_height = 0;
+  int m_last_efb_scale = 0;
   TargetRectangle m_target_rectangle = {};
   bool m_xfb_written = false;
 
@@ -189,7 +191,10 @@ private:
   void ShutdownFrameDumping();
 
   PEControl::PixelFormat m_prev_efb_format = PEControl::INVALID_FMT;
-  unsigned int m_efb_scale = 1;
+  unsigned int m_efb_scale_numeratorX = 1;
+  unsigned int m_efb_scale_numeratorY = 1;
+  unsigned int m_efb_scale_denominatorX = 1;
+  unsigned int m_efb_scale_denominatorY = 1;
 
   // These will be set on the first call to SetWindowSize.
   int m_last_window_request_width = 0;

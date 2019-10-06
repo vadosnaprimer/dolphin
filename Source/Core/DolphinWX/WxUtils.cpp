@@ -173,7 +173,7 @@ void SetWindowSizeAndFitToScreen(wxTopLevelWindow* tlw, wxPoint pos, wxSize size
   if (window_geometry.IsEmpty() || window_geometry.GetWidth() > screen_geometry.GetWidth() ||
       window_geometry.GetHeight() > screen_geometry.GetHeight())
   {
-    window_geometry.SetSize(default_size);
+    //window_geometry.SetSize(default_size);
   }
 
   // Check if the window entirely lives on a single monitor without spanning.

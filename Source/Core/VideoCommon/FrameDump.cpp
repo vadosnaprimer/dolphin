@@ -330,6 +330,7 @@ void FrameDump::AddFrame(const u8* data, int width, int height, int stride, cons
   int error = 0;
   u64 delta;
   s64 last_pts;
+
   // Check to see if the first frame being dumped is the first frame of output from the emulator.
   // This prevents an issue with starting dumping later in emulation from placing the frames
   // incorrectly.
@@ -338,10 +339,11 @@ void FrameDump::AddFrame(const u8* data, int width, int height, int stride, cons
     s_last_frame = state.ticks;
     s_last_frame_is_valid = true;
   }
+
   if (!s_start_dumping && state.first_frame)
   {
     delta = state.ticks;
-    last_pts = AV_NOPTS_VALUE;
+    last_pts = 0;
     s_start_dumping = true;
   }
   else
@@ -349,20 +351,28 @@ void FrameDump::AddFrame(const u8* data, int width, int height, int stride, cons
     delta = state.ticks - s_last_frame;
     last_pts = (s_last_pts * s_codec_context->time_base.den) / state.ticks_per_second;
   }
+
   u64 pts_in_ticks = s_last_pts + delta;
-  s_scaled_frame->pts = (pts_in_ticks * s_codec_context->time_base.den) / state.ticks_per_second;
-  if (s_scaled_frame->pts != last_pts)
+  int new_pts = (pts_in_ticks * s_codec_context->time_base.den) / state.ticks_per_second;
+
+  if (new_pts != last_pts)
   {
     s_last_frame = state.ticks;
     s_last_pts = pts_in_ticks;
-    error = SendFrameAndReceivePacket(s_codec_context, &pkt, s_scaled_frame, &got_packet);
+
+    for (int count = 0; count < new_pts - last_pts; count++)
+    {
+      error = SendFrameAndReceivePacket(s_codec_context, &pkt, s_scaled_frame, &got_packet);
+
+      if (!error && got_packet)
+      {
+        WritePacket(pkt);
+      }
+
+      if (error)
+        ERROR_LOG(VIDEO, "Error while encoding video: %d", error);
+    }
   }
-  if (!error && got_packet)
-  {
-    WritePacket(pkt);
-  }
-  if (error)
-    ERROR_LOG(VIDEO, "Error while encoding video: %d", error);
 }
 
 static void HandleDelayedPackets()

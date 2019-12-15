@@ -380,6 +380,7 @@ void AVIDump::Stop()
   av_write_trailer(s_format_context);
   CloseVideoFile();
   s_file_index = 0;
+  s_start_dumping = false;
   NOTICE_LOG(VIDEO, "Stopping frame dump");
   OSD::AddMessage("Stopped dumping frames");
 }

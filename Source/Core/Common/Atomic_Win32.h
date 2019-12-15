@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Windows.h>
+#include <intrin.h>
 
 #include "Common/CommonTypes.h"
 

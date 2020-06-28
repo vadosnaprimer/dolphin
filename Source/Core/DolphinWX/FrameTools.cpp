@@ -1233,10 +1233,10 @@ void CFrame::OnStopped()
 		Close(true);
 
 	// If using auto size with render to main, reset the application size.
-	if (SConfig::GetInstance().bRenderToMain &&
-		SConfig::GetInstance().bRenderWindowAutoSize)
-		SetSize(SConfig::GetInstance().iWidth,
-		SConfig::GetInstance().iHeight);
+	//if (SConfig::GetInstance().bRenderToMain &&
+	//	SConfig::GetInstance().bRenderWindowAutoSize)
+	//	SetSize(SConfig::GetInstance().iWidth,
+	//	SConfig::GetInstance().iHeight);
 
 	m_GameListCtrl->Enable();
 	m_GameListCtrl->Show();

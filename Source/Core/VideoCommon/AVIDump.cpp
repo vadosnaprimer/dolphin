@@ -106,7 +106,7 @@ bool AVIDump::CreateFile()
 		return false;
 	}
 
-	s_stream->codec->codec_id = g_Config.bUseFFV1 ? AV_CODEC_ID_FFV1
+	s_stream->codec->codec_id = g_Config.bUseFFV1 ? AV_CODEC_ID_UTVIDEO
 	                                              : s_format_context->oformat->video_codec;
 	if (!g_Config.bUseFFV1)
 		s_stream->codec->codec_tag = MKTAG('X', 'V', 'I', 'D'); // Force XVID FourCC for better compatibility
@@ -116,10 +116,11 @@ bool AVIDump::CreateFile()
 	s_stream->codec->height = s_height;
 	s_stream->codec->time_base.num = 1;
 	s_stream->codec->time_base.den = VideoInterface::GetTargetRefreshRate();
-	s_stream->codec->coder_type = 1;
-	s_stream->codec->level = 1;
+	//s_stream->codec->coder_type = 1;
+	//s_stream->codec->level = 1;
+	s_stream->codec->prediction_method = FF_PRED_MEDIAN;
 	s_stream->codec->gop_size = 1;
-	s_stream->codec->pix_fmt = g_Config.bUseFFV1 ? AV_PIX_FMT_BGR0 : AV_PIX_FMT_YUV420P;
+	s_stream->codec->pix_fmt = g_Config.bUseFFV1 ? AV_PIX_FMT_RGB24 : AV_PIX_FMT_YUV420P;
 
 	if (!(codec = avcodec_find_encoder(s_stream->codec->codec_id)) ||
 	    (avcodec_open2(s_stream->codec, codec, nullptr) < 0))

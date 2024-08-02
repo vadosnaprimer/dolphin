@@ -154,10 +154,10 @@ void Wiimote::HandleExtensionSwap()
     return;
   }
 
-  ExtensionNumber desired_extension_number = g_extension_config_callback(m_index);
+  ExtensionNumber desired_extension_number = ExtensionNumber::NONE;
       //static_cast<ExtensionNumber>(m_attachments->GetSelectedAttachment());
 
-  const bool desired_motion_plus = g_mplus_config_callback(m_index);//m_motion_plus_setting.GetValue();
+  const bool desired_motion_plus = false;//m_motion_plus_setting.GetValue();
 
   // FYI: AttachExtension also connects devices to the i2c bus
 

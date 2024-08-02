@@ -11,6 +11,18 @@
 #include "Common/CommonTypes.h"
 #include "Common/Swap.h"
 #include "Core/HW/Memmap.h"
+#include "Core/HW/WiimoteEmu/WiimoteEmu.h"
+
+using AddSamplesFunction = std::function<void(const short*, unsigned int, int, int, int)>;
+AddSamplesFunction g_dsp_add_samples_func;
+AddSamplesFunction g_dtk_add_samples_func;
+
+std::atomic_bool g_gpu_lagged, g_do_render;
+std::atomic<u32*> g_frame_buffer;
+std::atomic<u32> g_width, g_height;
+
+bool (*g_mplus_config_callback)(int);
+WiimoteEmu::ExtensionNumber (*g_extension_config_callback)(int);
 
 namespace IOS::HLE::USB
 {

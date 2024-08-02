@@ -5,6 +5,7 @@
 
 #include <QMainWindow>
 #include <QStringList>
+#include "Core/Boot/Boot.h"
 
 #include <array>
 #include <memory>

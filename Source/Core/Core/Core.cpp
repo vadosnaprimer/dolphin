@@ -923,7 +923,7 @@ void Callback_NewField()
 
     // Only stop the frame stepping if a new frame was displayed
     // (as opposed to the previous frame being displayed for another frame).
-    if (s_stop_frame_step.load())
+    //if (s_stop_frame_step.load())
     {
       s_frame_step = false;
       CPU::Break();
@@ -951,9 +951,9 @@ void UpdateTitle(u32 ElapseTime)
   std::string SFPS;
   if (Movie::IsPlayingInput())
   {
-    SFPS = fmt::format("Input: {}/{} - VI: {}/{} - FPS: {:.0f} - VPS: {:.0f} - {:.0f}%",
+    SFPS = fmt::format("Input: {}/{} - VI: {}/{} - Cycle: {}",
                        Movie::GetCurrentInputCount(), Movie::GetTotalInputCount(),
-                       Movie::GetCurrentFrame(), Movie::GetTotalFrames(), FPS, VPS, Speed);
+                       Movie::GetCurrentFrame(), Movie::GetTotalFrames(), CoreTiming::GetTicks());
   }
   else if (Movie::IsRecordingInput())
   {

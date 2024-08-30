@@ -11,6 +11,8 @@
 #include <optional>
 #include <string>
 
+#include "Core/Boot/Boot.h"
+
 class QStackedWidget;
 class QString;
 

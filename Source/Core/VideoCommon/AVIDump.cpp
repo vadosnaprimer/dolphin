@@ -144,7 +144,7 @@ bool AVIDump::CreateVideoFile()
     return false;
   }
 
-  const std::string& codec_name = g_Config.bUseFFV1 ? "ffv1" : g_Config.sDumpCodec;
+  const std::string& codec_name = g_Config.bUseFFV1 ? "utvideo" : g_Config.sDumpCodec;
 
   AVCodecID codec_id = output_format->video_codec;
 
@@ -177,9 +177,10 @@ bool AVIDump::CreateVideoFile()
   s_codec_context->time_base.num = 1;
   s_codec_context->time_base.den = VideoInterface::GetTargetRefreshRate();
   s_codec_context->gop_size = 1;
-  s_codec_context->pix_fmt = g_Config.bUseFFV1 ? AV_PIX_FMT_BGR0 : AV_PIX_FMT_YUV420P;
-  s_codec_context->coder_type = 1;
-  s_codec_context->level = 1;
+  s_codec_context->pix_fmt = g_Config.bUseFFV1 ? AV_PIX_FMT_RGB24 : AV_PIX_FMT_YUV420P;
+  s_codec_context->prediction_method = FF_PRED_MEDIAN;
+  //s_codec_context->coder_type = 1;
+  //s_codec_context->level = 1;
 
   if (output_format->flags & AVFMT_GLOBALHEADER)
     s_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;

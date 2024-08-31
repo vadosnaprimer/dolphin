@@ -75,7 +75,7 @@ void VideoConfig::Load(const std::string& ini_file)
   settings->Get("DumpEFBTarget", &bDumpEFBTarget, false);
   settings->Get("DumpFramesAsImages", &bDumpFramesAsImages, false);
   settings->Get("FreeLook", &bFreeLook, false);
-  settings->Get("UseUtVideo", &bUseFFV1, false);
+  settings->Get("UseFFV1", &bUseFFV1, false);
   settings->Get("DumpFormat", &sDumpFormat, "avi");
   settings->Get("DumpCodec", &sDumpCodec, "");
   settings->Get("DumpPath", &sDumpPath, "");
@@ -302,7 +302,7 @@ void VideoConfig::Save(const std::string& ini_file)
   settings->Set("DumpEFBTarget", bDumpEFBTarget);
   settings->Set("DumpFramesAsImages", bDumpFramesAsImages);
   settings->Set("FreeLook", bFreeLook);
-  settings->Set("UseUtVideo", bUseFFV1);
+  settings->Set("UseFFV1", bUseFFV1);
   settings->Set("DumpFormat", sDumpFormat);
   settings->Set("DumpCodec", sDumpCodec);
   settings->Set("DumpPath", sDumpPath);

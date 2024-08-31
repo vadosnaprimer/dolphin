@@ -895,7 +895,7 @@ VideoConfigDiag::VideoConfigDiag(wxWindow* parent, const std::string& title)
       szr_utility->Add(CreateCheckBox(page_advanced, _("Free Look"),
                                       wxGetTranslation(free_look_desc), vconfig.bFreeLook));
 #if defined(HAVE_LIBAV) || defined(_WIN32)
-      szr_utility->Add(CreateCheckBox(page_advanced, _("Frame Dumps Use FFV1"),
+      szr_utility->Add(CreateCheckBox(page_advanced, _("Frame Dumps Use UtVideo"),
                                       wxGetTranslation(use_ffv1_desc), vconfig.bUseFFV1));
 #endif
 
